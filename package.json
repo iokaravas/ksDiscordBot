@@ -1,0 +1,15 @@
+{
+  "name": "ksdiscordbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ksDiscordBot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ioannis Karavas",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.5.0",
+    "node-fetch": "^2.5.0"
+  }
+}
