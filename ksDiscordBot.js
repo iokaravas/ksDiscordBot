@@ -94,7 +94,7 @@ class ksDiscordBot {
 
         if (this.cache) {
             dataChanged = (fetchedData.pledged!==this.cache.pledged)
-            dataChanged = (dataChanged && (fetchedData.backers_count!==this.cache.backers_count))
+            dataChanged = (dataChanged || (fetchedData.backers_count!==this.cache.backers_count))
         }
 
         // Create the message
