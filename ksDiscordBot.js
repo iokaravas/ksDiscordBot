@@ -159,8 +159,8 @@ class ksDiscordBot {
                 this.lastPledged = this.cache.pledged.split('.')[0]
                 this.lastBackers_count = this.cache.backers_count
             } else {
-                this.lastPledged = 0
-                this.lastBackers_count = 0
+                this.lastPledged = fetchedData
+                this.lastBackers_count = fetchedData
             }
 
             // Calculate difference values
@@ -173,8 +173,8 @@ class ksDiscordBot {
         }
 
         return `__Kickstarter Campaign ${fundedPercentage}:__\n
-Pledged Total:  ${pledgeText}  :moneybag: *${pledgedDiff>0?pledgedDiffText:''}* \n
-Backers:            ${backerText}  :scream: *${backersDiff>0?backersDiffText:''}*\n
+Pledged Total:  ${pledgeText}  :moneybag: *${pledgedDiff!==0?pledgedDiffText:''}* \n
+Backers:            ${backerText}  :scream: *${backersDiff!==0?backersDiffText:''}*\n
 Comments:      ${commentText}  :scream_cat: \n
 *Last changed on: ${this.lastChangeTime}* (GMT+2)
 *Last checked on: ${timeDate}* (GMT+2)`
