@@ -166,11 +166,11 @@ class ksDiscordBot {
             // Calculate difference values
             pledgedDiff = this.lastPledged - fetchedData.pledged
             backersDiff = this.lastBackers_count - fetchedData.backers_count
-
-            // Create text for differences
-            pledgedDiffText = `(${(pledgedDiff<=0?"":"+") + pledgedDiff})`
-            backersDiffText = `(${(backersDiff<=0?"":"+") + backersDiff})`
         }
+
+        // Create text for differences
+        pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
+        backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
 
         return `__Kickstarter Campaign ${fundedPercentage}:__\n
 Pledged Total:  ${pledgeText}  :moneybag: *${pledgedDiff!==0?pledgedDiffText:''}* \n
