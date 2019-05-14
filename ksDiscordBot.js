@@ -174,8 +174,8 @@ class ksDiscordBot {
         backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
 
         return `__Kickstarter Campaign ${fundedPercentage}:__\n
-Pledged Total:  ${pledgeText}  :moneybag: *${pledgedDiff!==0?pledgedDiffText:''}* \n
-Backers:            ${backerText}  :scream: *${backersDiff!==0?backersDiffText:''}*\n
+Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff!==0?('*'+pledgedDiffText+'*'):''} \n
+Backers:            ${backerText}  :scream: ${backersDiff!==0?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
 *Last changed on: ${this.lastChangeTime}* (GMT+2)
 *Last checked on: ${timeDate}* (GMT+2)`
