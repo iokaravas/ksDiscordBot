@@ -159,8 +159,8 @@ class ksDiscordBot {
                 this.lastPledged = this.cache.pledged.split('.')[0]
                 this.lastBackers_count = this.cache.backers_count
             } else {
-                this.lastPledged = fetchedData
-                this.lastBackers_count = fetchedData
+                this.lastPledged = fetchedData.pledged
+                this.lastBackers_count = fetchedData.backers_count
             }
 
             // Calculate difference values
