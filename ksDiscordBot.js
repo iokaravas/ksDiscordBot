@@ -163,10 +163,11 @@ class ksDiscordBot {
                 this.lastBackers_count = fetchedData.backers_count
             }
 
-            // Calculate difference values
-            pledgedDiff = this.lastPledged - fetchedData.pledged
-            backersDiff = this.lastBackers_count - fetchedData.backers_count
         }
+
+        // Calculate difference values
+        pledgedDiff = this.lastPledged - fetchedData.pledged
+        backersDiff = this.lastBackers_count - fetchedData.backers_count
 
         // Create text for differences
         pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
