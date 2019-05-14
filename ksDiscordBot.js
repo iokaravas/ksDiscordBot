@@ -137,6 +137,10 @@ class ksDiscordBot {
         const backerText = ksDiscordBot.emotesFromNum(fetchedData.backers_count)
         const commentText = ksDiscordBot.emotesFromNum(fetchedData.comments_count)
 
+        // Difference values
+        let pledgedDiff,backersDiff
+        let pledgedDiffText, backersDiffText
+
         // Create percentage if exists
         let fundedPercentage = ''
 
@@ -155,14 +159,22 @@ class ksDiscordBot {
                 this.lastPledged = this.cache.pledged.split('.')[0]
                 this.lastBackers_count = this.cache.backers_count
             } else {
-                this.lastPledged = '-'
-                this.lastBackers_count = '-'
+                this.lastPledged = 0
+                this.lastBackers_count = 0
             }
+
+            // Calculate difference values
+            pledgedDiff = this.lastPledged - fetchedData.pledged
+            backersDiff = this.lastBackers_count - fetchedData.backers_count
+
+            // Create text for differences
+            pledgedDiffText = `(${(pledgedDiff<=0?"":"+") + pledgedDiff})`
+            backersDiffText = `(${(backersDiff<=0?"":"+") + backersDiff})`
         }
 
         return `__Kickstarter Campaign ${fundedPercentage}:__\n
-Pledged Total:  ${pledgeText}  :moneybag: *( ${this.lastPledged} )* \n
-Backers:            ${backerText}  :scream: *( ${this.lastBackers_count} )*\n
+Pledged Total:  ${pledgeText}  :moneybag: *${pledgedDiff!==0?pledgedDiffText:''}* \n
+Backers:            ${backerText}  :scream: *${backersDiff!==0?backersDiffText:''}*\n
 Comments:      ${commentText}  :scream_cat: \n
 *Last changed on: ${this.lastChangeTime}* (GMT+2)
 *Last checked on: ${timeDate}* (GMT+2)`
