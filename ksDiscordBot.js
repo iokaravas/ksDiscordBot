@@ -188,7 +188,7 @@ class ksDiscordBot {
                 return lastMessage.delete()
             }
         })
-        return new Promise.reject
+        return new Promise.reject()
     }
 
     async editMessage(message) {
@@ -202,7 +202,7 @@ class ksDiscordBot {
                 return lastMessage.edit(message)
             }
         })
-        return new Promise.reject
+        return new Promise.reject()
     }
 
     tallyChanges(fetchedData) {
