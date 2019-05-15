@@ -148,11 +148,11 @@ class ksDiscordBot {
             fundedPercentage = `${((fetchedData.pledged / this.goal) * 100).toFixed(2)}% funded`
         }
 
-        const timeDate = new Date().toLocaleString()
+        const timeDate = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         // If data changed
         if (dataChanged) {
-            this.lastChangeTime = new Date().toLocaleString()
+            this.lastChangeTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
             // Update last values
             if (this.cache) {
