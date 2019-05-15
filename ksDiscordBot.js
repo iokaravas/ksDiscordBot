@@ -14,6 +14,7 @@ class ksDiscordBot {
         this.goal = opts.goal
         this.pollrate = opts.pollrate
         this.campaign = opts.campaign
+        this.showLink = opts.showLink
 
         if (!(this.apiKey && this.channelKey && this.campaign)) {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
@@ -21,6 +22,10 @@ class ksDiscordBot {
 
         if (!this.pollrate) {
             this.pollrate = _DEF_POLLRATE
+        }
+
+        if (!this.showlink) {
+            this.showlink = false
         }
 
         this.cache = null // Local cache
@@ -173,12 +178,19 @@ class ksDiscordBot {
         pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
         backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
 
-        return `__Kickstarter Campaign ${fundedPercentage}:__\n
+        let discordMessage = `__Kickstarter Campaign ${fundedPercentage}:__\n
 Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff!==0?('*'+pledgedDiffText+'*'):''} \n
 Backers:            ${backerText}  :scream: ${backersDiff!==0?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
 *Last changed on: ${this.lastChangeTime}* (GMT+2)
 *Last checked on: ${timeDate}* (GMT+2)`
+
+        if (this.showLink) {
+            discordMessage += `\n Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
+https://www.kickstarter.com/projects/${this.campaign}`
+        }
+
+        return discordMessage
     }
 
     /**
