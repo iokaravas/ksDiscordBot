@@ -114,6 +114,18 @@ class ksDiscordBot {
                 if (now.getDate()!==this.startDate.getDate()) {
                     // Reset
                     this.cache = null
+                    stats = {
+                      totals : {
+                        pledged:0,
+                        backers_count:0,
+                        comments_count:0
+                      },
+                      lastChange : {
+                        pledged:0,
+                        backers_count:0,
+                        comments_count:0
+                      }
+                    }
                 }
             }
         }
