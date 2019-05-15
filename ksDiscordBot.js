@@ -144,9 +144,6 @@ class ksDiscordBot {
      * @param fetchedData.comments_count
      */
     async postLatestStatus(fetchedData) {
-        // Status flag
-        let messagePosted = false
-
         // Create the message
         let message = this.createMessage(fetchedData)
 
@@ -155,29 +152,11 @@ class ksDiscordBot {
             // Delete last message (if any)
             await this.deleteLastMessage().then(() => {
                 // Post new message
-                this.channel.send(message).then(()=>{
-                    messagePosted = true
-                },()=>{
-                    messagePosted = false
-                })
-            })
-
-            // If all else failed, Post new message if forced by option
-            if (!messagePosted && this.opts.forceNewMessage) {
                 this.channel.send(message)
-            }
+            })
         } else {
             // Edit message (if exists, otherwise post new)
-            await this.editMessage(message).then(() => {
-                messagePosted = true
-            },()=>{
-                messagePosted = false
-            })
-
-            // If all else failed, Post new message if forced by option
-            if (!messagePosted && this.opts.forceNewMessage) {
-                this.channel.send(message)
-            }
+            await this.editMessage(message)
         }
     }
 
@@ -189,12 +168,9 @@ class ksDiscordBot {
 
             // Delete last message if it's from the bot
             if (lastMessage.author.bot) {
-                return lastMessage.delete.then(() => {
-                    return Promise.resolve()
-                })
+                return lastMessage.delete
             }
         })
-        return Promise.reject()
     }
 
     async editMessage(message) {
@@ -205,12 +181,9 @@ class ksDiscordBot {
 
             // Edit last message if it is indeed from the bot, otherwise send new
             if (lastMessage.author.bot) {
-                lastMessage.edit(message).then(()=>{
-                    return Promise.resolve()
-                })
+                lastMessage.edit(message)
             }
         })
-        return Promise.reject()
     }
 
     tallyChanges(fetchedData) {
