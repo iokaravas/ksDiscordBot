@@ -179,7 +179,7 @@ class ksDiscordBot {
 
     }
 
-    deleteLastMessage() {
+    async deleteLastMessage() {
         // Get messages from channel (limit 1)
         this.channel.fetchMessages({limit: 1}).then(messages => {
             // Get last message
@@ -193,7 +193,7 @@ class ksDiscordBot {
 
     }
 
-    editMessage(message) {
+    async editMessage(message) {
         // Get messages from channel (limit 1)
         this.channel.fetchMessages({limit: 1}).then(messages => {
             // Get last message
