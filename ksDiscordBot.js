@@ -315,7 +315,7 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
         // Add campaign link
         if (this.opts.showLink) {
             discordMessage += `
-            Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
+Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
 https://www.kickstarter.com/projects/${this.opts.campaign}`
         }
 
