@@ -2,33 +2,47 @@ const Discord = require('discord.js')
 const fetch = require('node-fetch')
 
 // Defaults
-_DEF_POLLRATE = 30
+const defaultOpts = {
+    apiKey : null,
+    channelKey : null,
+    campaign : null,
+    goal : null,
+    forceNewMessage: true,
+    pollRate : 30,
+    notifyOnChange : false,
+    resetDaily : false,
+    showLink : false,
+    showTotalChange: false,
+    showLastChange: true
+}
+
+// Total change so far
+let stats = {
+    totals : {
+        pledged:0,
+          backers_count:0,
+          comments_count:0
+    },
+    lastChange : {
+        pledged:0,
+        backers_count:0,
+        comments_count:0
+    }
+}
 
 // ksDiscordBot!
 class ksDiscordBot {
 
-    constructor(opts) {
-        // Set options
-        this.apiKey = opts.apiKey
-        this.channelKey = opts.channel
-        this.goal = opts.goal
-        this.pollrate = opts.pollrate
-        this.campaign = opts.campaign
-        this.showLink = opts.showLink
+    constructor(opts = {}) {
+        // Set default options
+        this.opts = Object.assign(defaultOpts, opts)
 
-        if (!(this.apiKey && this.channelKey && this.campaign)) {
+        if (!(this.opts.apiKey && this.opts.channelKey && this.opts.campaign)) {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-        if (!this.pollrate) {
-            this.pollrate = _DEF_POLLRATE
-        }
-
-        if (!this.showlink) {
-            this.showlink = false
-        }
-
         this.cache = null // Local cache
+        this.startDate = new Date()
     }
 
     /**
@@ -39,14 +53,14 @@ class ksDiscordBot {
         this.instance = new Discord.Client()
 
         // Connect to Discord
-        this.instance.login(this.apiKey)
+        this.instance.login(this.opts.apiKey)
 
         // On connection start process
         this.instance.on('ready', () => {
             // Get channel key to use
-            this.channel = this.instance.channels.get(this.channelKey)
+            this.channel = this.instance.channels.get(this.opts.channelKey)
 
-            // Start checking kickstarter status
+            // Start checking Kickstarter status
             this.startPolling()
         })
     }
@@ -58,10 +72,11 @@ class ksDiscordBot {
         // Run first poll
         this.fetchData().then(()=>{
             // Start interval
-            this.pollerInterval = setInterval(this.fetchData.bind(this), this.pollrate * 60000)
+            this.pollerInterval = setInterval(this.fetchData.bind(this), this.opts.pollRate * 60000)
         })
     }
 
+    // noinspection JSUnusedGlobalSymbols
     /**
      * Stops the polling process
      */
@@ -76,7 +91,7 @@ class ksDiscordBot {
      */
     async fetchData() {
         // Create the API URI
-        const URL = `https://www.kickstarter.com/projects/${this.campaign}/stats.json?v=1`
+        const URL = `https://www.kickstarter.com/projects/${this.opts.campaign}/stats.json?v=1`
 
         // Actually fetch the data
         let fetchedResp = await fetch(URL)
@@ -87,56 +102,136 @@ class ksDiscordBot {
             throw `Erroneous data received`
         }
 
-        this.postLatestStatus(fetchedData.project)
+        // Check if we need to reset
+        if (this.opts.resetDaily) {
+            if (this.cache) {
+                let now = new Date()
+                if (now.getDate()!==this.startDate.getDate()) {
+                    // Reset
+                    this.cache = null
+                }
+            }
+        }
+
+        // Go through the posting process
+        this.postLatestStatus(fetchedData.project).then(()=>{
+            this.cache = fetchedData.project
+        })
     }
 
     /**
      * Will post the latest data in a message on discord
+     * @param fetchedData
+     * @param fetchedData.pledged
+     * @param fetchedData.backers_count
+     * @param fetchedData.comments_count
      */
-    postLatestStatus(fetchedData) {
+    async postLatestStatus(fetchedData) {
         // Get if data changed
         let dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
+        let messagePosted = false
 
         if (this.cache) {
-            dataChanged = (fetchedData.pledged!==this.cache.pledged)
-            dataChanged = (dataChanged || (fetchedData.backers_count!==this.cache.backers_count))
+            dataChanged = (fetchedData.pledged !== this.cache.pledged)
+            dataChanged = (dataChanged || (fetchedData.backers_count !== this.cache.backers_count))
         }
 
         // Create the message
         let message = this.createMessage(fetchedData)
 
-        // Get last message in channel and update or re-create accordingly
-        this.channel.fetchMessages({limit: 1}).then(messages => {
-            // Get last message
-            let lastMessage = messages.first();
+        // Send to Discord
+        if (this.opts.notifyOnChange && dataChanged) {
+            // Delete last message (if any)
+            await this.deleteLastMessage().then(() => {
+                // Post new message
+                this.channel.send(message).then(()=>{
+                    messagePosted = true
+                })
+            })
+        } else if (dataChanged) {
+            // Edit message (if exists, otherwise post new)
+            await this.editMessage(message).then(() => {
+                messagePosted = true
+            })
+        }
 
-            if (lastMessage.author.bot) { // Small failsafe
-                if (dataChanged) {
-                    // If data changed, it'll re-post to force "unread" to channel
-                    lastMessage.delete().then(() => {
-                        this.channel.send(message)
-                    })
-                } else {
-                    // If no data were changed, will only update the lasted checked time
-                    lastMessage.edit(message)
-                }
-            } else {
-                this.channel.send(message)
-            }
+        // If all else failed, Post new message if forced by option
+        if (!messagePosted && this.opts.forceNewMessage) {
+            this.channel.send(message)
+        }
 
-        })
-
-        this.cache = fetchedData
     }
 
-    /**
-     * Creates the formatted message for the kickstarter status
-     * @returns {string}
-     */
-    createMessage(fetchedData) {
+    deleteLastMessage() {
+        // Get messages from channel (limit 1)
+        this.channel.fetchMessages({limit: 1}).then(messages => {
+            // Get last message
+            let lastMessage = messages.first()
+
+            // Delete last message if it's from the bot
+            if (lastMessage.author.bot) {
+                return lastMessage.delete()
+            }
+        })
+
+        return Promise.reject()
+    }
+
+    editMessage(message) {
+        // Get messages from channel (limit 1)
+        this.channel.fetchMessages({limit: 1}).then(messages => {
+            // Get last message
+            let lastMessage = messages.first()
+
+            // Edit last message if it is indeed from the bot, otherwise send new
+            if (lastMessage.author.bot) {
+                return lastMessage.edit(message)
+            }
+        })
+
+        return Promise.reject()
+    }
+
+    tallyChanges(fetchedData) {
+        // Get if data changed
+        const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
+        let data = fetchedData // Defaults to latest values
+
+        if (dataChanged) {
+            // Update to previous values
+            if (this.cache) {
+                data = this.cache
+            }
+
+            // Set last changed values
+            stats.lastChange.pledged = data.pledged.split('.')[0]
+            stats.lastChange.backers_count =  data.backers_count
+            stats.lastChange.comments_count =  data.comments_count
+
+            // Set total changed values
+            stats.totals.pledged += stats.lastChange.pledged
+            stats.totals.backers_count += stats.lastChange.backers_count
+            stats.totals.comments_count += stats.lastChange.comments_count
+        }
+    }
+
+    createTimestamp(fetchedData) {
         // Get if data changed
         const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
 
+        // Current time
+        const timeDate = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        // If data changed, update last change time
+        if (dataChanged) {
+            stats.lastChangeTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        }
+
+        return `*Last changed on: ${stats.lastChangeTime}* (GMT+2)
+*Last checked on: ${timeDate}* (GMT+2)`
+    }
+
+    static createLastChangeText(fetchedData) {
         // Create status messages
         const pledgeText = ksDiscordBot.emotesFromNum(fetchedData.pledged)
         const backerText = ksDiscordBot.emotesFromNum(fetchedData.backers_count)
@@ -146,48 +241,61 @@ class ksDiscordBot {
         let pledgedDiff,backersDiff
         let pledgedDiffText, backersDiffText
 
-        // Create percentage if exists
-        let fundedPercentage = ''
-
-        if (this.goal) {
-            fundedPercentage = `${((fetchedData.pledged / this.goal) * 100).toFixed(2)}% funded`
-        }
-
-        const timeDate = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-        // If data changed
-        if (dataChanged) {
-            this.lastChangeTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-            // Update last values
-            if (this.cache) {
-                this.lastPledged = this.cache.pledged.split('.')[0]
-                this.lastBackers_count = this.cache.backers_count
-            } else {
-                this.lastPledged = fetchedData.pledged
-                this.lastBackers_count = fetchedData.backers_count
-            }
-
-        }
-
         // Calculate difference values
-        pledgedDiff = fetchedData.pledged - this.lastPledged
-        backersDiff = fetchedData.backers_count - this.lastBackers_count
+        pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
+        backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
 
         // Create text for differences
         pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
         backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
 
-        let discordMessage = `__Kickstarter Campaign ${fundedPercentage}:__\n
+        return `
 Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff!==0?('*'+pledgedDiffText+'*'):''} \n
 Backers:            ${backerText}  :scream: ${backersDiff!==0?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
-*Last changed on: ${this.lastChangeTime}* (GMT+2)
-*Last checked on: ${timeDate}* (GMT+2)`
+`
+    }
 
-        if (this.showLink) {
+    static createTotalChangeText() {
+        // Return totals since last reset
+        return `
+Total amount pledged today:  +${ksDiscordBot.emotesFromNum(stats.totals.pledged)} :moneybag: \n
+Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_count)} :scream: \n
+`
+    }
+
+    /**
+     * Creates the formatted message for the kickstarter status
+     * @returns {string}
+     */
+    createMessage(fetchedData) {
+        // Calculate totals / last change from new data
+        this.tallyChanges(fetchedData)
+
+        // Create percentage if exists
+        let fundedPercentage = ''
+
+        if (this.opts.goal) {
+            fundedPercentage = `${((fetchedData.pledged / this.opts.goal) * 100).toFixed(2)}% funded`
+        }
+
+        // Start creating the message ( title first )
+        let discordMessage = `__Kickstarter Campaign ${fundedPercentage}:__\n`
+
+        // Create accordingly to what option is set (Totals or Last change)
+        if (this.opts.showLastChange) {
+            discordMessage += ksDiscordBot.createLastChangeText(fetchedData)
+        } else if (this.opts.showTotalChange) {
+            discordMessage += ksDiscordBot.createTotalChangeText()
+        }
+
+        // Add timestamp
+        discordMessage += this.createTimestamp
+
+        // Add campaign link
+        if (this.opts.showLink) {
             discordMessage += `\n Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
-https://www.kickstarter.com/projects/${this.campaign}`
+https://www.kickstarter.com/projects/${this.opts.campaign}`
         }
 
         return discordMessage
