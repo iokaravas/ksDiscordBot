@@ -182,6 +182,8 @@ class ksDiscordBot {
             // Edit last message if it is indeed from the bot, otherwise send new
             if (lastMessage.author.bot) {
                 lastMessage.edit(message)
+            } else {
+                this.channel.send(message)
             }
         })
     }
