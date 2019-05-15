@@ -15,7 +15,7 @@ const defaultOpts = {
     showTotalChange: false,
     showLastChange: true,
     initialData : {
-        pledged : 0,
+        pledged : '0',
         backers_count : 0,
         comments_count: 0
     }
@@ -170,8 +170,7 @@ class ksDiscordBot {
             if (!messagePosted && this.opts.forceNewMessage) {
                 this.channel.send(message)
             }
-        } else if (dataChanged) {
-
+        } else {
             // Edit message (if exists, otherwise post new)
             await this.editMessage(message).then(() => {
                 messagePosted = true
