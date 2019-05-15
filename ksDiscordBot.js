@@ -307,7 +307,7 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
         }
 
         // Add timestamp
-        discordMessage += this.createTimestamp()
+        discordMessage += this.createTimestamp(fetchedData)
 
         // Add campaign link
         if (this.opts.showLink) {
