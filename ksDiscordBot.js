@@ -245,7 +245,7 @@ class ksDiscordBot {
         }
 
         return `*Last changed on: ${stats.lastChangeTime}* (GMT+2)
-*Last checked on: ${timeDate}* (GMT+2)`
+*Last checked on: ${timeDate}* (GMT+2)\n`
     }
 
     static createLastChangeText(fetchedData) {
@@ -311,7 +311,7 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
 
         // Add campaign link
         if (this.opts.showLink) {
-            discordMessage += `\n Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
+            discordMessage += `Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
 https://www.kickstarter.com/projects/${this.opts.campaign}`
         }
 
