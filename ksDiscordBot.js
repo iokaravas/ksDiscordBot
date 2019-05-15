@@ -157,6 +157,8 @@ class ksDiscordBot {
                 // Post new message
                 this.channel.send(message).then(()=>{
                     messagePosted = true
+                },()=>{
+                    messagePosted = false
                 })
             })
 
@@ -168,6 +170,8 @@ class ksDiscordBot {
             // Edit message (if exists, otherwise post new)
             await this.editMessage(message).then(() => {
                 messagePosted = true
+            },()=>{
+                messagePosted = false
             })
 
             // If all else failed, Post new message if forced by option
