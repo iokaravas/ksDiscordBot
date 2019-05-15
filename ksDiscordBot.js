@@ -189,7 +189,9 @@ class ksDiscordBot {
 
             // Delete last message if it's from the bot
             if (lastMessage.author.bot) {
-                return lastMessage.delete()
+                return lastMessage.delete.then(() => {
+                    return Promise.resolve()
+                })
             }
         })
         return Promise.reject()
@@ -203,7 +205,9 @@ class ksDiscordBot {
 
             // Edit last message if it is indeed from the bot, otherwise send new
             if (lastMessage.author.bot) {
-                return lastMessage.edit(message)
+                lastMessage.edit(message).then(()=>{
+                    return Promise.resolve()
+                })
             }
         })
         return Promise.reject()
