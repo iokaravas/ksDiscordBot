@@ -144,17 +144,14 @@ class ksDiscordBot {
      * @param fetchedData.comments_count
      */
     async postLatestStatus(fetchedData) {
-        // Get if data changed
-        let dataChanged = (fetchedData.pledged !== this.cache.pledged)
-        dataChanged = (dataChanged || (fetchedData.backers_count !== this.cache.backers_count))
-
+        // Status flag
         let messagePosted = false
 
         // Create the message
         let message = this.createMessage(fetchedData)
 
         // Send to Discord
-        if (this.opts.notifyOnChange && dataChanged) {
+        if (this.opts.notifyOnChange) {
             // Delete last message (if any)
             await this.deleteLastMessage().then(() => {
                 // Post new message
@@ -178,7 +175,6 @@ class ksDiscordBot {
                 this.channel.send(message)
             }
         }
-
     }
 
     async deleteLastMessage() {
