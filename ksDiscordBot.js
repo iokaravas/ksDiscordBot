@@ -46,11 +46,13 @@ class ksDiscordBot {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-        this.cache = opts.initialData // Local cache
+
         this.startDate = new Date()
 
         if (this.opts.showTotalChange) {
-            stats.totals = opts.initialData
+            stats.totals = opts.initialData // Local stats
+        } else {
+            this.cache = opts.initialData // Local cache
         }
     }
 
