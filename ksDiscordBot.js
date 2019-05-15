@@ -18,6 +18,11 @@ const defaultOpts = {
         pledged : '0',
         backers_count : 0,
         comments_count: 0
+    },
+    initialTotals : {
+        pledged : '0',
+        backers_count : 0,
+        comments_count: 0
     }
 }
 
@@ -46,14 +51,9 @@ class ksDiscordBot {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-
+        stats.totals = opts.initialTotals // Local stats
+        this.cache = opts.initialData // Local cache
         this.startDate = new Date()
-
-        if (this.opts.showTotalChange) {
-            stats.totals = opts.initialData // Local stats
-        } else {
-            this.cache = opts.initialData // Local cache
-        }
     }
 
     /**
