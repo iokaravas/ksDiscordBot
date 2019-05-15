@@ -25,8 +25,8 @@ const defaultOpts = {
 let stats = {
     totals : {
         pledged:0,
-          backers_count:0,
-          comments_count:0
+        backers_count:0,
+        comments_count:0
     },
     lastChange : {
         pledged:0,
@@ -48,6 +48,10 @@ class ksDiscordBot {
 
         this.cache = opts.initialData // Local cache
         this.startDate = new Date()
+
+        if (this.opts.showTotalChange) {
+            stats.totals = opts.initialData
+        }
     }
 
     /**
