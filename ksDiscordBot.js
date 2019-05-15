@@ -13,7 +13,12 @@ const defaultOpts = {
     resetDaily : false,
     showLink : false,
     showTotalChange: false,
-    showLastChange: true
+    showLastChange: true,
+    initialData : {
+        pledged : 0,
+        backers_count : 0,
+        comments_count: 0
+    }
 }
 
 // Total change so far
@@ -41,7 +46,7 @@ class ksDiscordBot {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-        this.cache = null // Local cache
+        this.cache = opts.initialData // Local cache
         this.startDate = new Date()
     }
 
