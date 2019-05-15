@@ -145,13 +145,10 @@ class ksDiscordBot {
      */
     async postLatestStatus(fetchedData) {
         // Get if data changed
-        let dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
-        let messagePosted = false
+        let dataChanged = (fetchedData.pledged !== this.cache.pledged)
+        dataChanged = (dataChanged || (fetchedData.backers_count !== this.cache.backers_count))
 
-        if (this.cache) {
-            dataChanged = (fetchedData.pledged !== this.cache.pledged)
-            dataChanged = (dataChanged || (fetchedData.backers_count !== this.cache.backers_count))
-        }
+        let messagePosted = false
 
         // Create the message
         let message = this.createMessage(fetchedData)
@@ -236,7 +233,8 @@ class ksDiscordBot {
 
     createTimestamp(fetchedData) {
         // Get if data changed
-        const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
+        let dataChanged = (fetchedData.pledged !== this.cache.pledged)
+        dataChanged = (dataChanged || (fetchedData.backers_count !== this.cache.backers_count))
 
         // Current time
         const timeDate = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -261,7 +259,7 @@ class ksDiscordBot {
         let pledgedDiffText, backersDiffText
 
         // Calculate difference values
-        pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
+        pledgedDiff = fetchedData.pledged - parseInt(stats.lastChange.pledged)
         backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
 
         // Create text for differences
