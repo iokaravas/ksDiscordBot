@@ -163,16 +163,12 @@ class ksDiscordBot {
                 // Post new message
                 this.channel.send(message).then(()=>{
                     messagePosted = true
-                },()=>{
-                    messagePosted = false
                 })
             })
         } else if (dataChanged) {
             // Edit message (if exists, otherwise post new)
             await this.editMessage(message).then(() => {
                 messagePosted = true
-            },()=>{
-                messagePosted = false
             })
         }
 
@@ -195,7 +191,6 @@ class ksDiscordBot {
             }
         })
 
-        return Promise.reject()
     }
 
     editMessage(message) {
@@ -209,8 +204,6 @@ class ksDiscordBot {
                 return lastMessage.edit(message)
             }
         })
-
-        return Promise.reject()
     }
 
     tallyChanges(fetchedData) {
