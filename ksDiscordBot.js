@@ -165,16 +165,22 @@ class ksDiscordBot {
                     messagePosted = true
                 })
             })
+
+            // If all else failed, Post new message if forced by option
+            if (!messagePosted && this.opts.forceNewMessage) {
+                this.channel.send(message)
+            }
         } else if (dataChanged) {
+
             // Edit message (if exists, otherwise post new)
             await this.editMessage(message).then(() => {
                 messagePosted = true
             })
-        }
 
-        // If all else failed, Post new message if forced by option
-        if (!messagePosted && this.opts.forceNewMessage) {
-            this.channel.send(message)
+            // If all else failed, Post new message if forced by option
+            if (!messagePosted && this.opts.forceNewMessage) {
+                this.channel.send(message)
+            }
         }
 
     }
@@ -308,7 +314,8 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
 
         // Add campaign link
         if (this.opts.showLink) {
-            discordMessage += `Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
+            discordMessage += `
+            Visit the Kickstarter page for more accurate stats ( and sweet traffic ):
 https://www.kickstarter.com/projects/${this.opts.campaign}`
         }
 
