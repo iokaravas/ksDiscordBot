@@ -206,14 +206,14 @@ class ksDiscordBot {
             }
 
             // Set last changed values
-            stats.lastChange.pledged = data.pledged.split('.')[0]
+            stats.lastChange.pledged = parseInt(data.pledged.split('.')[0])
             stats.lastChange.backers_count =  data.backers_count
             stats.lastChange.comments_count =  data.comments_count
 
             // Set total changed values
-            stats.totals.pledged += stats.lastChange.pledged
-            stats.totals.backers_count += stats.lastChange.backers_count
-            stats.totals.comments_count += stats.lastChange.comments_count
+            stats.totals.pledged += (parseInt(fetchedData.pledged) - stats.lastChange.pledged)
+            stats.totals.backers_count += (fetchedData.backers_count - stats.lastChange.backers_count)
+            stats.totals.comments_count += (fetchedData.comments_count - stats.lastChange.comments_count)
         }
     }
 
