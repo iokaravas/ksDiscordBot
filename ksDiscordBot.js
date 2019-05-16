@@ -120,14 +120,15 @@ class ksDiscordBot {
                 if (now.getDate()!==this.startDate.getDate()) {
                     // Reset
                     this.cache = null
+
                     stats = {
                       totals : {
-                        pledged:0,
-                        backers_count:0,
-                        comments_count:0
+                        pledged: this.cache.pledged,
+                        backers_count: this.cache.backers_count,
+                        comments_count: this.cache.comments_count
                       },
                       lastChange : {
-                        pledged:0,
+                        pledged: 0,
                         backers_count:0,
                         comments_count:0
                       }
