@@ -40,13 +40,12 @@ class ksDiscordBot {
         }
 
         // Initialization of totals / lastChanged
-        stats.totals = Object.assign(stats.totals, emptyDataset)
-        stats.lastChange = Object.assign(stats.totals, emptyDataset)
+        stats.totals = Object.assign({}, emptyDataset)
+        stats.lastChange = Object.assign({}, emptyDataset)
 
-        if (opts.hasOwnProperty('initialTotals')) stats.totals = opts.initialTotals
+        if (opts.hasOwnProperty('initialTotals')) stats.totals =  Object.assign({}, opts.initialTotals)
 
-        this.cache = {}
-        this.cache = Object.assign(this.cache, emptyDataset)
+        this.cache = Object.assign({}, emptyDataset)
         this.startDate = new Date()
     }
 
@@ -114,9 +113,9 @@ class ksDiscordBot {
         if (this.opts.resetDaily) {
             let now = new Date()
             if (now.getDate()!==this.startDate.getDate()) {
-                stats.totals = Object.assign(emptyDataset, stats.totals)
-                stats.lastChange = Object.assign(emptyDataset, stats.totals)
-                this.cache = Object.assign(emptyDataset, this.cache)
+                stats.totals = Object.assign({},emptyDataset)
+                stats.lastChange = Object.assign({},emptyDataset)
+                this.cache = Object.assign({},emptyDataset )
                 this.startDate = new Date()
             }
         }
