@@ -304,7 +304,7 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
      */
     static emotesFromNum(num) {
         const emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:']
-        let numText = String(num.toFixed(0))
+        let numText = String(num.toFixed(0)) // We can't emote .
         let emotesText = ''
 
         for (let ch of numText) {
