@@ -25,7 +25,7 @@ const emptyDataset = {
 let stats = {
     totals: {}
 }
-let firstRun = true
+let cleanRun = true
 let lastChangedTime
 
 // ksDiscordBot!
@@ -77,7 +77,7 @@ class ksDiscordBot {
         this.fetchData().then(()=>{
             // Start interval
             this.pollerInterval = setInterval(()=>{
-                firstRun = false
+                cleanRun = false
                 this.fetchData.bind(this)()
             }, this.opts.pollRate * 60000)
         })
@@ -117,6 +117,7 @@ class ksDiscordBot {
                 stats.lastChange = Object.assign({},emptyDataset)
                 this.cache = Object.assign({},emptyDataset )
                 this.startDate = new Date()
+                cleanRun = true // Reset properly
             }
         }
 
@@ -182,8 +183,8 @@ class ksDiscordBot {
     }
 
     tallyChanges(fetchedData) {
-        // No need totally anything on first run
-        if (firstRun) return
+        // No need tally anything on clean slate run
+        if (cleanRun) return
 
         // Get if data changed
         const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
@@ -224,15 +225,11 @@ class ksDiscordBot {
         const backerText = ksDiscordBot.emotesFromNum(fetchedData.backers_count)
         const commentText = ksDiscordBot.emotesFromNum(fetchedData.comments_count)
 
-        // Difference values
-        // let pledgedDiff,backersDiff
+        // Difference
         let pledgedDiffText, backersDiffText
 
         // Calculate difference values if not first run
-        if (!firstRun) {
-            // pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
-            // backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
-
+        if (!cleanRun) {
             // Create text for differences
             pledgedDiffText = `(${((stats.lastChange.pledged<=0?"":"+") + stats.lastChange.pledged)})`
             backersDiffText = `(${((stats.lastChange.backers_count<=0?"":"+") + stats.lastChange.backers_count)})`
