@@ -111,18 +111,10 @@ class ksDiscordBot {
         if (this.opts.resetDaily) {
             let now = new Date()
             if (now.getDate()!==this.startDate.getDate()) {
-                stats = {
-                    totals : {
-                        pledged: 0,
-                        backers_count: 0,
-                        comments_count: 0
-                    },
-                    lastChange : {
-                        pledged: Number(fetchedData.project.pledged),
-                        backers_count: fetchedData.project.backers_count,
-                        comments_count: fetchedData.project.comments_count
-                    }
-                }
+                stats.totals = Object.assign(emptyDataset, stats.totals)
+                stats.lastChange = Object.assign(emptyDataset, stats.totals)
+                this.cache = Object.assign(emptyDataset, this.cache)
+                this.startDate = new Date()
             }
         }
 
