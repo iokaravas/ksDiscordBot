@@ -1,6 +1,9 @@
 const Discord = require('discord.js')
 const fetch = require('node-fetch')
+
+// Event Emitter for logging
 const EventEmitter = require('events')
+let eventEmitter = new EventEmitter();
 
 // Defaults
 const defaultOpts = {
@@ -49,13 +52,22 @@ class ksDiscordBot {
 
         // Initialization of counters
         this.resetInitCounters()
-        if (opts.hasOwnProperty('initialTotals')) stats.totals =  Object.assign({}, opts.initialTotals)
+        if ('initialTotals' in opts) stats.totals =  Object.assign({}, opts.initialTotals)
+    }
+
+    static log(message) {
+        eventEmitter.emit('log',message)
+    }
+
+    on(e,f) {
+        return eventEmitter.on(e,f)
     }
 
     /**
      * Initialization (connects, sets channel, starts process)
      */
-    init() {
+    async init() {
+
         // Create instance of Discord Client
         this.instance = new Discord.Client()
 
@@ -68,6 +80,7 @@ class ksDiscordBot {
             this.channel = this.instance.channels.get(this.opts.channelKey)
 
             // Start checking Kickstarter status
+            ksDiscordBot.log('Starting polling')
             this.startPolling()
         })
     }
@@ -104,6 +117,8 @@ class ksDiscordBot {
         let fetchedResp = await fetch(URL)
         let fetchedData = await fetchedResp.json()
 
+        ksDiscordBot.log('Fetched new data')
+
         // Validate & Rectify data
         if (!fetchedData.hasOwnProperty('project')) {
             throw `Erroneous data received`
@@ -113,6 +128,7 @@ class ksDiscordBot {
 
         // Check if we need to reset
         if (this.opts.resetDaily && (new Date().getDate() !== this.startDate.getDate())) {
+            ksDiscordBot.log('Daily reset triggered')
             this.resetInitCounters()
         }
 
@@ -120,6 +136,7 @@ class ksDiscordBot {
         this.postLatestStatus(fetchedData.project).then(()=>{
             this.cache = fetchedData.project // Update cache
             cleanRun = false
+            ksDiscordBot.log(`Message Posted.`)
         })
     }
 
@@ -131,18 +148,22 @@ class ksDiscordBot {
      * @param fetchedData.comments_count
      */
     async postLatestStatus(fetchedData) {
+
         // Create the message
         let message = this.createMessage(fetchedData)
 
         // Send to Discord
         if (this.opts.notifyOnChange) {
+            ksDiscordBot.log('Deleting message in Discord...')
             // Delete last message (if any)
             this.deleteLastMessage().then(() => {
                 // Post new message
+                ksDiscordBot.log('Posting to Discord...')
                 this.channel.send(message)
             })
         } else {
             // Edit message (if exists, otherwise post new)
+            ksDiscordBot.log('Editing message in Discord...')
             this.editMessage(message)
         }
     }
@@ -177,21 +198,38 @@ class ksDiscordBot {
 
     tallyChanges(fetchedData) {
         // No need to tally anything on clean slate run
-        if (cleanRun) return
+        if (cleanRun) {
+            ksDiscordBot.log(`It's a clean run, nothing is calculated`)
+            return
+        }
 
         // Get if data changed
         const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
 
         if (dataChanged) {
+            ksDiscordBot.log(`New data was different...`)
             // Set last changed values
             stats.lastChange.pledged = fetchedData.pledged - this.cache.pledged
             stats.lastChange.backers_count = fetchedData.backers_count - this.cache.backers_count
             stats.lastChange.comments_count = fetchedData.comments_count - this.cache.comments_count
 
+            ksDiscordBot.log(`New pledges: ${stats.lastChange.pledged}`)
+            ksDiscordBot.log(`New backers: ${stats.lastChange.backers_count}`)
+            ksDiscordBot.log(`New comments: ${stats.lastChange.comments_count}`)
+
             // Set total changed values
             stats.totals.pledged += stats.lastChange.pledged
             stats.totals.backers_count += stats.lastChange.backers_count
             stats.totals.comments_count += stats.lastChange.comments_count
+
+            ksDiscordBot.log(`New total pledges: ${stats.totals.pledged}`)
+            ksDiscordBot.log(`New total backers: ${stats.totals.backers_count}`)
+            ksDiscordBot.log(`New total comments: ${stats.totals.comments_count}`)
+        } else {
+            ksDiscordBot.log('No differences with older data (cache)')
+            ksDiscordBot.log(`Pledges: ${this.cache.pledged}`)
+            ksDiscordBot.log(`Backers: ${this.cache.backers_count}`)
+            ksDiscordBot.log(`Comments: ${this.cache.comments_count}`)
         }
     }
 
@@ -248,6 +286,7 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
      * @returns {string}
      */
     createMessage(fetchedData) {
+        ksDiscordBot.log('Calculate differences and totals...')
         // Calculate totals / last change from new data
         this.tallyChanges(fetchedData)
 
