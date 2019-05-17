@@ -202,7 +202,7 @@ class ksDiscordBot {
 
         if (dataChanged) {
             // Update to previous values
-            if (this.cache) {
+            if (stats.lastChangeTime) {
                 data = this.cache
             }
 
