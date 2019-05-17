@@ -15,12 +15,12 @@ const defaultOpts = {
     showTotalChange: false,
     showLastChange: true,
     initialData : {
-        pledged : '0',
+        pledged : 0,
         backers_count : 0,
         comments_count: 0
     },
     initialTotals : {
-        pledged : '0',
+        pledged : 0,
         backers_count : 0,
         comments_count: 0
     }
@@ -118,9 +118,6 @@ class ksDiscordBot {
             if (this.cache) {
                 let now = new Date()
                 if (now.getDate()!==this.startDate.getDate()) {
-                    // Reset
-                    this.cache = null
-
                     stats = {
                       totals : {
                         pledged: this.cache.pledged,
@@ -136,6 +133,9 @@ class ksDiscordBot {
                 }
             }
         }
+
+        // Small fix for String data
+        fetchedData.project.pledged = Number(fetchedData.project.pledged)
 
         // Go through the posting process
         this.postLatestStatus(fetchedData.project).then(()=>{
@@ -207,12 +207,12 @@ class ksDiscordBot {
             }
 
             // Set last changed values
-            stats.lastChange.pledged = parseInt(data.pledged.split('.')[0])
+            stats.lastChange.pledged = data.pledged
             stats.lastChange.backers_count =  data.backers_count
             stats.lastChange.comments_count =  data.comments_count
 
             // Set total changed values
-            stats.totals.pledged += (parseInt(fetchedData.pledged) - stats.lastChange.pledged)
+            stats.totals.pledged += fetchedData.pledged - stats.lastChange.pledged
             stats.totals.backers_count += (fetchedData.backers_count - stats.lastChange.backers_count)
             stats.totals.comments_count += (fetchedData.comments_count - stats.lastChange.comments_count)
         }
@@ -246,7 +246,7 @@ class ksDiscordBot {
         let pledgedDiffText, backersDiffText
 
         // Calculate difference values
-        pledgedDiff = fetchedData.pledged - parseInt(stats.lastChange.pledged)
+        pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
         backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
 
         // Create text for differences
@@ -313,7 +313,7 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
      */
     static emotesFromNum(num) {
         const emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:']
-        let numText = (num + '').split('.')[0]
+        let numText = String(num)
         let emotesText = ''
 
         for (let ch of numText) {
