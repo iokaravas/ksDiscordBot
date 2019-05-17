@@ -22,7 +22,9 @@ const emptyDataset = {
 }
 
 // Some state vars
-let stats = {}
+let stats = {
+    totals: {}
+}
 let firstRun = true
 let lastChangedTime
 
@@ -38,12 +40,13 @@ class ksDiscordBot {
         }
 
         // Initialization of totals / lastChanged
-        stats.totals = Object.assign(emptyDataset, stats.totals)
-        stats.lastChange = Object.assign(emptyDataset, stats.totals)
+        stats.totals = Object.assign(stats.totals, emptyDataset)
+        stats.lastChange = Object.assign(stats.totals, emptyDataset)
 
         if (opts.hasOwnProperty('initialTotals')) stats.totals = opts.initialTotals
 
-        this.cache = Object.assign(emptyDataset, this.cache)
+        this.cache = {}
+        this.cache = Object.assign(this.cache, emptyDataset)
         this.startDate = new Date()
     }
 
