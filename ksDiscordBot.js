@@ -231,22 +231,22 @@ class ksDiscordBot {
         const commentText = ksDiscordBot.emotesFromNum(fetchedData.comments_count)
 
         // Difference values
-        let pledgedDiff,backersDiff
+        // let pledgedDiff,backersDiff
         let pledgedDiffText, backersDiffText
 
         // Calculate difference values if not first run
         if (!firstRun) {
-            pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
-            backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
+            // pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
+            // backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
 
             // Create text for differences
-            pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
-            backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
+            pledgedDiffText = `(${((stats.lastChange.pledged<=0?"":"+") + stats.lastChange.pledged)})`
+            backersDiffText = `(${((stats.lastChange.backers_count<=0?"":"+") + stats.lastChange.backers_count)})`
         }
 
         return `
-Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff?('*'+pledgedDiffText+'*'):''} \n
-Backers:            ${backerText}  :scream: ${backersDiff?('*'+backersDiffText+'*'):''}\n
+Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiffText?('*'+pledgedDiffText+'*'):''} \n
+Backers:            ${backerText}  :scream: ${backersDiffText?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
 `
     }
