@@ -7,38 +7,24 @@ const defaultOpts = {
     channelKey : null,
     campaign : null,
     goal : null,
-    forceNewMessage: true,
     pollRate : 30,
     notifyOnChange : false,
     resetDaily : false,
     showLink : false,
-    showTotalChange: false,
-    showLastChange: true,
-    initialData : {
-        pledged : 0,
-        backers_count : 0,
-        comments_count: 0
-    },
-    initialTotals : {
-        pledged : 0,
-        backers_count : 0,
-        comments_count: 0
-    }
+    showTotalChange: false
 }
 
-// Total change so far
-let stats = {
-    totals : {
-        pledged:0,
-        backers_count:0,
-        comments_count:0
-    },
-    lastChange : {
-        pledged:0,
-        backers_count:0,
-        comments_count:0
-    }
+// Empty dataset for clearing values
+const emptyDataset = {
+    pledged:0,
+    backers_count:0,
+    comments_count:0
 }
+
+// Some state vars
+let stats = {}
+let firstRun = true
+let lastChangedTime
 
 // ksDiscordBot!
 class ksDiscordBot {
@@ -51,8 +37,13 @@ class ksDiscordBot {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-        stats.totals = opts.initialTotals // Local stats
-        this.cache = opts.initialData // Local cache
+        // Initialization of totals / lastChanged
+        stats.totals = Object.assign(emptyDataset, stats.totals)
+        stats.lastChange = Object.assign(emptyDataset, stats.totals)
+
+        if (opts.hasOwnProperty('initialTotals')) stats.totals = opts.initialTotals
+
+        this.cache = Object.assign(emptyDataset, this.cache)
         this.startDate = new Date()
     }
 
@@ -83,7 +74,10 @@ class ksDiscordBot {
         // Run first poll
         this.fetchData().then(()=>{
             // Start interval
-            this.pollerInterval = setInterval(this.fetchData.bind(this), this.opts.pollRate * 60000)
+            this.pollerInterval = setInterval(()=>{
+                firstRun = false
+                this.fetchData.bind(this)
+            }, this.opts.pollRate * 60000)
         })
     }
 
@@ -115,20 +109,18 @@ class ksDiscordBot {
 
         // Check if we need to reset
         if (this.opts.resetDaily) {
-            if (this.cache) {
-                let now = new Date()
-                if (now.getDate()!==this.startDate.getDate()) {
-                    stats = {
-                      totals : {
-                        pledged: this.cache.pledged,
-                        backers_count: this.cache.backers_count,
-                        comments_count: this.cache.comments_count
-                      },
-                      lastChange : {
+            let now = new Date()
+            if (now.getDate()!==this.startDate.getDate()) {
+                stats = {
+                    totals : {
                         pledged: 0,
-                        backers_count:0,
-                        comments_count:0
-                      }
+                        backers_count: 0,
+                        comments_count: 0
+                    },
+                    lastChange : {
+                        pledged: Number(fetchedData.project.pledged),
+                        backers_count: fetchedData.project.backers_count,
+                        comments_count: fetchedData.project.comments_count
                     }
                 }
             }
@@ -157,59 +149,56 @@ class ksDiscordBot {
         // Send to Discord
         if (this.opts.notifyOnChange) {
             // Delete last message (if any)
-            await this.deleteLastMessage().then(() => {
+            this.deleteLastMessage().then(() => {
                 // Post new message
                 this.channel.send(message)
             })
         } else {
             // Edit message (if exists, otherwise post new)
-            await this.editMessage(message)
+            this.editMessage(message)
         }
     }
 
-    async deleteLastMessage() {
+    deleteLastMessage() {
         // Get messages from channel (limit 1)
-        this.channel.fetchMessages({limit: 1}).then(messages => {
+        return this.channel.fetchMessages({limit: 1}).then(messages => {
             // Get last message
             let lastMessage = messages.first()
 
             // Delete last message if it's from the bot
             if (lastMessage.author.bot) {
-                return lastMessage.delete
+                return lastMessage.delete()
             }
         })
     }
 
-    async editMessage(message) {
+    editMessage(message) {
         // Get messages from channel (limit 1)
-        this.channel.fetchMessages({limit: 1}).then(messages => {
+        return this.channel.fetchMessages({limit: 1}).then(messages => {
             // Get last message
             let lastMessage = messages.first()
 
             // Edit last message if it is indeed from the bot, otherwise send new
             if (lastMessage.author.bot) {
-                lastMessage.edit(message)
+                return lastMessage.edit(message)
             } else {
-                this.channel.send(message)
+                return this.channel.send(message)
             }
         })
     }
 
     tallyChanges(fetchedData) {
+        // No need totally anything on first run
+        if (firstRun) return
+
         // Get if data changed
         const dataChanged = ((JSON.stringify(fetchedData)) !== (JSON.stringify(this.cache)))
-        let data = fetchedData // Defaults to latest values
 
         if (dataChanged) {
-            // Update to previous values
-            if (stats.lastChangeTime) {
-                data = this.cache
-            }
-
             // Set last changed values
-            stats.lastChange.pledged = data.pledged
-            stats.lastChange.backers_count =  data.backers_count
-            stats.lastChange.comments_count =  data.comments_count
+            stats.lastChange.pledged = fetchedData.pledged
+            stats.lastChange.backers_count =  fetchedData.backers_count
+            stats.lastChange.comments_count =  fetchedData.comments_count
 
             // Set total changed values
             stats.totals.pledged += fetchedData.pledged - stats.lastChange.pledged
@@ -228,10 +217,10 @@ class ksDiscordBot {
 
         // If data changed, update last change time
         if (dataChanged) {
-            stats.lastChangeTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            lastChangedTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         }
 
-        return `*Last changed on: ${stats.lastChangeTime}* (GMT+2)
+        return `*Last changed on: ${lastChangedTime}* (GMT+2)
 *Last checked on: ${timeDate}* (GMT+2)\n`
     }
 
@@ -245,17 +234,19 @@ class ksDiscordBot {
         let pledgedDiff,backersDiff
         let pledgedDiffText, backersDiffText
 
-        // Calculate difference values
-        pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
-        backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
+        // Calculate difference values if not first run
+        if (!firstRun) {
+            pledgedDiff = fetchedData.pledged - stats.lastChange.pledged
+            backersDiff = fetchedData.backers_count - stats.lastChange.backers_count
 
-        // Create text for differences
-        pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
-        backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
+            // Create text for differences
+            pledgedDiffText = `(${((pledgedDiff<=0?"":"+") + pledgedDiff)})`
+            backersDiffText = `(${((backersDiff<=0?"":"+") + backersDiff)})`
+        }
 
         return `
-Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff!==0?('*'+pledgedDiffText+'*'):''} \n
-Backers:            ${backerText}  :scream: ${backersDiff!==0?('*'+backersDiffText+'*'):''}\n
+Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiff?('*'+pledgedDiffText+'*'):''} \n
+Backers:            ${backerText}  :scream: ${backersDiff?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
 `
     }
@@ -287,10 +278,10 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
         let discordMessage = `__Kickstarter Campaign ${fundedPercentage}:__\n`
 
         // Create accordingly to what option is set (Totals or Last change)
-        if (this.opts.showLastChange) {
-            discordMessage += ksDiscordBot.createLastChangeText(fetchedData)
-        } else if (this.opts.showTotalChange) {
+        if (this.opts.showTotalChange) {
             discordMessage += ksDiscordBot.createTotalChangeText()
+        } else {
+            discordMessage += ksDiscordBot.createLastChangeText(fetchedData)
         }
 
         // Add timestamp
@@ -313,7 +304,7 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
      */
     static emotesFromNum(num) {
         const emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:']
-        let numText = String(num)
+        let numText = String(num.toFixed(0))
         let emotesText = ''
 
         for (let ch of numText) {
