@@ -76,7 +76,7 @@ class ksDiscordBot {
             // Start interval
             this.pollerInterval = setInterval(()=>{
                 firstRun = false
-                this.fetchData.bind(this)
+                this.fetchData.bind(this)()
             }, this.opts.pollRate * 60000)
         })
     }
