@@ -1,5 +1,6 @@
 const Discord = require('discord.js')
 const fetch = require('node-fetch')
+const EventEmitter = require('events')
 
 // Defaults
 const defaultOpts = {
@@ -22,31 +23,33 @@ const emptyDataset = {
 }
 
 // Some state vars
-let stats = {
-    totals: {}
-}
+let stats = {}
 let cleanRun = true
 let lastChangedTime
 
 // ksDiscordBot!
 class ksDiscordBot {
 
+    resetInitCounters() {
+        stats.totals = Object.assign({}, emptyDataset)
+        stats.lastChange = Object.assign({}, emptyDataset)
+        this.cache = Object.assign({}, emptyDataset)
+        this.startDate = new Date()
+        cleanRun = true
+    }
+
     constructor(opts = {}) {
-        // Set default options
+        // Set default parameters
         this.opts = Object.assign(defaultOpts, opts)
 
+        // Check for required parameters
         if (!(this.opts.apiKey && this.opts.channelKey && this.opts.campaign)) {
             throw `Cannot initialize with no Discord API KEY and target campaign/channel`
         }
 
-        // Initialization of totals / lastChanged
-        stats.totals = Object.assign({}, emptyDataset)
-        stats.lastChange = Object.assign({}, emptyDataset)
-
+        // Initialization of counters
+        this.resetInitCounters()
         if (opts.hasOwnProperty('initialTotals')) stats.totals =  Object.assign({}, opts.initialTotals)
-
-        this.cache = Object.assign({}, emptyDataset)
-        this.startDate = new Date()
     }
 
     /**
@@ -76,10 +79,7 @@ class ksDiscordBot {
         // Run first poll
         this.fetchData().then(()=>{
             // Start interval
-            this.pollerInterval = setInterval(()=>{
-                cleanRun = false
-                this.fetchData.bind(this)()
-            }, this.opts.pollRate * 60000)
+            this.pollerInterval = setInterval(this.fetchData.bind(this), this.opts.pollRate * 60000)
         })
     }
 
@@ -104,29 +104,22 @@ class ksDiscordBot {
         let fetchedResp = await fetch(URL)
         let fetchedData = await fetchedResp.json()
 
-        // Post in discord
+        // Validate & Rectify data
         if (!fetchedData.hasOwnProperty('project')) {
             throw `Erroneous data received`
         }
-
-        // Check if we need to reset
-        if (this.opts.resetDaily) {
-            let now = new Date()
-            if (now.getDate()!==this.startDate.getDate()) {
-                stats.totals = Object.assign({},emptyDataset)
-                stats.lastChange = Object.assign({},emptyDataset)
-                this.cache = Object.assign({},emptyDataset )
-                this.startDate = new Date()
-                cleanRun = true // Reset properly
-            }
-        }
-
         // Small fix for String data
         fetchedData.project.pledged = Number(fetchedData.project.pledged)
 
+        // Check if we need to reset
+        if (this.opts.resetDaily && (new Date().getDate() !== this.startDate.getDate())) {
+            this.resetInitCounters()
+        }
+
         // Go through the posting process
         this.postLatestStatus(fetchedData.project).then(()=>{
-            this.cache = fetchedData.project
+            this.cache = fetchedData.project // Update cache
+            cleanRun = false
         })
     }
 
@@ -183,7 +176,7 @@ class ksDiscordBot {
     }
 
     tallyChanges(fetchedData) {
-        // No need tally anything on clean slate run
+        // No need to tally anything on clean slate run
         if (cleanRun) return
 
         // Get if data changed
@@ -236,8 +229,8 @@ class ksDiscordBot {
         }
 
         return `
-Pledged Total:  ${pledgeText}  :moneybag: ${pledgedDiffText?('*'+pledgedDiffText+'*'):''} \n
-Backers:            ${backerText}  :scream: ${backersDiffText?('*'+backersDiffText+'*'):''}\n
+Pledged Total:  ${pledgeText}  :moneybag: ${stats.lastChange.pledged!==0?('*'+pledgedDiffText+'*'):''} \n
+Backers:            ${backerText}  :scream: ${stats.lastChange.backers_count!==0?('*'+backersDiffText+'*'):''}\n
 Comments:      ${commentText}  :scream_cat: \n
 `
     }
@@ -261,6 +254,7 @@ Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_
         // Create percentage if exists
         let fundedPercentage = ''
 
+        // If we have a Goal, add the percentage
         if (this.opts.goal) {
             fundedPercentage = `${((fetchedData.pledged / this.opts.goal) * 100).toFixed(2)}% funded`
         }
