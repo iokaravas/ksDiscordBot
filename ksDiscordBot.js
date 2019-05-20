@@ -57,8 +57,11 @@ class ksDiscordBot {
         }
     }
 
-    static log(message) {
+    static log(message, notify = false) {
         eventEmitter.emit('log',message)
+        if (notify) {
+            eventEmitter.emit('notify',message)
+        }
     }
 
     on(e,f) {
@@ -220,17 +223,16 @@ class ksDiscordBot {
             stats.lastChange.backers_count = fetchedData.backers_count - this.cache.backers_count
             stats.lastChange.comments_count = fetchedData.comments_count - this.cache.comments_count
 
-            ksDiscordBot.log(`> New change: Pledges | Backers | Comments`)
-            ksDiscordBot.log(`${stats.lastChange.pledged} | ${stats.lastChange.backers_count} | ${stats.lastChange.comments_count}`)
+            ksDiscordBot.log(`> New change: Pledges | Backers | Comments`, true)
+            ksDiscordBot.log(`${stats.lastChange.pledged} | ${stats.lastChange.backers_count} | ${stats.lastChange.comments_count}`, true)
 
             // Set total changed values
             stats.totals.pledged += stats.lastChange.pledged
             stats.totals.backers_count += stats.lastChange.backers_count
             stats.totals.comments_count += stats.lastChange.comments_count
 
-            ksDiscordBot.log(`> New totals: Pledges | Backers | Comments`)
-            ksDiscordBot.log(`${stats.totals.pledged} | ${stats.totals.backers_count} | ${stats.totals.comments_count}`)
-
+            ksDiscordBot.log(`> New totals: Pledges | Backers | Comments`, true)
+            ksDiscordBot.log(`${stats.totals.pledged} | ${stats.totals.backers_count} | ${stats.totals.comments_count}`, true)
         }
     }
 
@@ -336,6 +338,12 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
         }
 
         return emotesText
+    }
+
+    pm(userID, message) {
+        this.instance.fetchUser(userID).then(()=>{
+            userID.sendMessage(message)
+        })
     }
 
 }
