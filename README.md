@@ -29,21 +29,19 @@ The bot was developed keeping in mind that the channel will always be empty, oth
 ![This is an example output of the bot](example_output.png?raw=true "This is an example output of the bot")
 
 ```js
-const ksDiscordBot = require('ksDiscordBot')
+const ksDiscordBot = require('ksdiscordbot')
 
 let myksDiscordBot = new ksDiscordBot({
-    apiKey :'NTduMmmyKeyDummyKeyNTduMmmyKeyDummyKeyNTduMmmyKeyDummyKeyReplace', // Discord API key
-    channelKey : '412312435223', // Channel ID, right click on your special channel and copy ID, then paste here
+    apiKey :'SAFGJJ252IHDGHDHGOIOSIDFASDG-ASDGWETD.G5123hFGSAdsfsageASD0', // Discord API key
+    channelKey : '3423423523423423', // Channel ID, right click on your special channel and copy ID, then paste here
     campaign: 'sergiucraitoiu/unbound-worlds-apart', // The kickstarter project (it's part of the URL),
-    goal : 25000, // Optional: The goal of the kickstarter campaign, it will add a percentage on the message
-    forceNewMessage: true,
+    goal : null, // Optional: The goal of the kickstarter campaign, it will add a percentage on the message
     pollRate : 15, // Optional: Every how many minutes for the bot to update / recheck the status
     notifyOnChange : false,
-    resetDaily : false,
-    showLink : false,
+    resetDaily : true,
+    showLink : true,
     showTotalChange: false,
-    showLastChange: true,
-    initialData : {
+    initialTotals : {
         pledged : 0,
         backers_count : 0,
         comments_count: 0
