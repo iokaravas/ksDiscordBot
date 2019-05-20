@@ -341,8 +341,8 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
     }
 
     pm(userID, message) {
-        this.instance.fetchUser(userID).then(()=>{
-            userID.sendMessage(message)
+        this.instance.fetchUser(userID).then((user)=>{
+            user.sendMessage(message)
         })
     }
 
