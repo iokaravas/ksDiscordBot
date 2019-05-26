@@ -279,8 +279,8 @@ Comments:      ${commentText}  :scream_cat: \n
     static createTotalChangeText() {
         // Return totals since last reset
         return `
-Total amount pledged today:  +${ksDiscordBot.emotesFromNum(stats.totals.pledged)} :moneybag: \n
-Number of new backers today: +${ksDiscordBot.emotesFromNum(stats.totals.backers_count)} :scream: \n
+Total amount pledged today:  ${ksDiscordBot.emotesFromNum(stats.totals.pledged)} :moneybag: \n
+Number of new backers today: ${ksDiscordBot.emotesFromNum(stats.totals.backers_count)} :scream: \n
 `
     }
 
