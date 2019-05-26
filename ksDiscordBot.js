@@ -267,17 +267,9 @@ class ksDiscordBot {
         // Calculate difference values if not first run
         if (!cleanRun) {
 
-            if (stats.lastChange.pledged < 0) {
-                pledgeSign = '-'
-            }
-
-            if (stats.lastChange.backers_count < 0) {
-                backersSign = '-'
-            }
-
             // Create text for differences
-            pledgedDiffText = `(${pledgeSign}${stats.lastChange.pledged})`
-            backersDiffText = `(${backersSign}${stats.lastChange.backers_count} )`
+            pledgedDiffText = `(${stats.lastChange.pledged})`
+            backersDiffText = `(${stats.lastChange.backers_count} )`
         }
 
         return `
@@ -346,9 +338,13 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
 
         for (let ch of numText) {
             if (ch === '-') {
-                continue
+                emotesText += '-'
             }
             emotesText += emotes[ch]
+        }
+
+        if (numText[0]!=='-') {
+            emotesText = `+${emotesText}`
         }
 
         return emotesText
