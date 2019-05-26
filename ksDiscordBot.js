@@ -261,12 +261,9 @@ class ksDiscordBot {
 
         // Difference
         let pledgedDiffText, backersDiffText
-        let pledgeSign = '+'
-        let backersSign = '+'
 
         // Calculate difference values if not first run
         if (!cleanRun) {
-
             // Create text for differences
             pledgedDiffText = `(${stats.lastChange.pledged})`
             backersDiffText = `(${stats.lastChange.backers_count} )`
@@ -344,7 +341,7 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
             emotesText += emotes[ch]
         }
 
-        if (numText[0]!=='-') {
+        if (num>0) {
             emotesText = `+${emotesText}`
         }
 
