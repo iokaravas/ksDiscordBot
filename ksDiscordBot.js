@@ -339,6 +339,7 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
         for (let ch of numText) {
             if (ch === '-') {
                 emotesText += '-'
+                continue
             }
             emotesText += emotes[ch]
         }
