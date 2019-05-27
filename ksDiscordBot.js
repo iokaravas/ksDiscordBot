@@ -260,13 +260,14 @@ class ksDiscordBot {
         const commentText = ksDiscordBot.emotesFromNum(fetchedData.comments_count)
 
         // Difference
-        let pledgedDiffText, backersDiffText
+        let pledgedDiffText = (stats.lastChange.pledged>0)?'+':'-'
+        let backersDiffText = (stats.backers_count>0)?'+':'-'
 
         // Calculate difference values if not first run
         if (!cleanRun) {
             // Create text for differences
-            pledgedDiffText = `(${stats.lastChange.pledged})`
-            backersDiffText = `(${stats.lastChange.backers_count} )`
+            pledgedDiffText += `(${stats.lastChange.pledged})`
+            backersDiffText += `(${stats.lastChange.backers_count} )`
         }
 
         return `
@@ -279,8 +280,8 @@ Comments:      ${commentText}  :scream_cat: \n
     static createTotalChangeText() {
         // Return totals since last reset
         return `
-Total amount pledged today:  ${ksDiscordBot.emotesFromNum(stats.totals.pledged)} :moneybag: \n
-Number of new backers today: ${ksDiscordBot.emotesFromNum(stats.totals.backers_count)} :scream: \n
+Total amount pledged today:  ${ksDiscordBot.emotesFromNum(stats.totals.pledged, true)} :moneybag: \n
+Number of new backers today: ${ksDiscordBot.emotesFromNum(stats.totals.backers_count,true)} :scream: \n
 `
     }
 
@@ -326,24 +327,17 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
     /**
      * Will create an emote number using any number given
      * @param num
+     * @param showSigns
      * @returns {string|string}
      */
-    static emotesFromNum(num) {
+    static emotesFromNum(num, showSigns = false) {
         const emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:']
-        let numText = String(num.toFixed(0)) // We can't emote '.'
-        let emotesText = ''
+        let numText = String(Math.abs(num.toFixed(0))) // We don't handle . for now
+        let emotesText = (showSigns?(num>0?'+':'-'):'') // Add signs if requested
 
         for (let ch of numText) {
-            if (ch === '-') {
-                emotesText += '-'
-                continue
-            }
             emotesText += emotes[ch]
         }
-
-        // if (num>0) {
-        //     emotesText = `+${emotesText}`
-        // }
 
         return emotesText
     }
