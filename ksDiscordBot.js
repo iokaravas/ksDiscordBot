@@ -266,8 +266,8 @@ class ksDiscordBot {
         // Calculate difference values if not first run
         if (!cleanRun) {
             // Create text for differences
-            pledgedDiffText += `(${stats.lastChange.pledged})`
-            backersDiffText += `(${stats.lastChange.backers_count} )`
+            pledgedDiffText += `(${Math.abs(stats.lastChange.pledged)})`
+            backersDiffText += `(${Math.abs(stats.lastChange.backers_count)} )`
         }
 
         return `
