@@ -261,13 +261,13 @@ class ksDiscordBot {
 
         // Difference
         let pledgedDiffText = (stats.lastChange.pledged>0)?'+':'-'
-        let backersDiffText = (stats.backers_count>0)?'+':'-'
+        let backersDiffText = (stats.lastChange.backers_count>0)?'+':'-'
 
         // Calculate difference values if not first run
         if (!cleanRun) {
             // Create text for differences
-            pledgedDiffText += `(${Math.abs(stats.lastChange.pledged)})`
-            backersDiffText += `(${Math.abs(stats.lastChange.backers_count)} )`
+            pledgedDiffText = `(${pledgedDiffText}${Math.abs(stats.lastChange.pledged)})`
+            backersDiffText = `(${backersDiffText}${Math.abs(stats.lastChange.backers_count)})`
         }
 
         return `
