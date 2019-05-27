@@ -341,9 +341,9 @@ https://www.kickstarter.com/projects/${this.opts.campaign}`
             emotesText += emotes[ch]
         }
 
-        if (num>0) {
-            emotesText = `+${emotesText}`
-        }
+        // if (num>0) {
+        //     emotesText = `+${emotesText}`
+        // }
 
         return emotesText
     }
